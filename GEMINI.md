@@ -8,7 +8,8 @@
 - **Global Variable Pitfall:** Avoid calling `tr()` (translations) or complex constructors (like `GitHub()`) in top-level or static variables. In Release mode, these may execute before the app is initialized, causing a silent crash before `main()` is reached. Use `get` properties instead.
 - **Native Plugin Crashes:** Some plugins (like `win_toast` in our testing) can cause silent native crashes during the `RegisterPlugins` phase in the C++ runner. If the app disappears immediately and `main()` logs don't trigger, the issue is likely in `generated_plugin_registrant.cc`.
 
-## Debugging Techniques
+## Debugging & Workflow
+- **Non-Blocking Launch:** When running the executable for verification, avoid using the `-Wait` flag in PowerShell. This allows the app to stay open while the CLI agent continues its task.
 - **Isolation:** To debug "disappearing" executables, simplify `main.dart` to a minimal `MaterialApp` and incrementally remove plugins from `pubspec.yaml` until the app stays open.
 - **Logging:** Standard `stdout`/`stderr` redirection often fails to capture early native crashes. Windows Event Viewer (`Application` log) is the best place to look for `Exception code: 0xc0000005` (Access Violation) errors.
 

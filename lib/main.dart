@@ -54,7 +54,28 @@ final globalNavigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
-    runApp(const MaterialApp(home: Scaffold(body: Center(child: Text('Obtainium Started')))));
+    await EasyLocalization.ensureInitialized();
+    
+    final np = NotificationsProvider();
+    await np.initialize();
+    
+    runApp(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (context) => AppsProvider()),
+          ChangeNotifierProvider(create: (context) => SettingsProvider()),
+          Provider(create: (context) => np),
+          Provider(create: (context) => LogsProvider()),
+        ],
+        child: EasyLocalization(
+          supportedLocales: supportedLocales.map((e) => e.key).toList(),
+          path: localeDir,
+          fallbackLocale: fallbackLocale,
+          useOnlyLangCode: false,
+          child: const Obtainium(),
+        ),
+      ),
+    );
   } catch (e, s) {
     try {
       File('crash_log.txt').writeAsStringSync('Error: $e\nStackTrace: $s');

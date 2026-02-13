@@ -1,11 +1,10 @@
-// Exposes functions that can be used to send notifications to the user
-// Contains a set of pre-defined ObtainiumNotification objects that should be used throughout the app
-
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-// import 'package:win_toast/win_toast.dart';
+import 'package:windows_notification/windows_notification.dart';
+import 'package:windows_notification/notification_message.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
@@ -202,27 +201,23 @@ class CheckingUpdatesNotification extends ObtainiumNotification {
 }
 
 class NotificationsProvider {
+  late WindowsNotification _winNotify;
   bool isInitialized = false;
 
   Future<void> initialize() async {
     if (isInitialized) return;
-    /*
-    isInitialized = await WinToast.instance().initialize(
-      aumId: 'Obtainium',
-      displayName: 'Obtainium',
-      iconPath: '',
-      clsid: '{5DE36BB4-6CD1-46C1-BE3A-27AF0A973FD9}',
-    );
-
-    WinToast.instance().setActivatedCallback((event) {
-      _showNotificationPayload(event.argument);
+    _winNotify = WindowsNotification(applicationId: 'Obtainium');
+    await _winNotify.init();
+    await _winNotify.initNotificationCallBack((details) {
+      if (details.eventType == EventType.onActivate) {
+        _showNotificationPayload(details.message.launch);
+      }
     });
-    */
     isInitialized = true;
   }
 
   Future<void> checkLaunchByNotif() async {
-    // Not directly supported by win_toast, but usually handled by callbacks if initialized early.
+    // Not directly supported
   }
 
   void _showNotificationPayload(String? payload, {bool doublePop = false}) {
@@ -253,7 +248,8 @@ class NotificationsProvider {
   }
 
   Future<void> cancel(int id) async {
-    // await WinToast.instance().dismiss(tag: id.toString(), group: 'Obtainium');
+    if (!isInitialized) await initialize();
+    await _winNotify.removeNotificationId(id.toString(), 'Obtainium');
   }
 
   Future<void> notifyRaw(
@@ -269,10 +265,8 @@ class NotificationsProvider {
     bool onlyAlertOnce = false,
     String? payload,
   }) async {
-    if (!isInitialized) {
-      await initialize();
-    }
-    /*
+    if (!isInitialized) await initialize();
+
     String progressXml = '';
     if (progPercent != null) {
       double value = progPercent >= 0 ? progPercent / 100.0 : 0.0;
@@ -281,23 +275,25 @@ class NotificationsProvider {
     }
 
     String xml = """
+<?xml version="1.0" encoding="utf-8"?>
 <toast launch="${payload ?? ''}">
   <visual>
     <binding template="ToastGeneric">
-      <text>$title</text>
-      <text>$message</text>
+      <text id="1">$title</text>
+      <text id="2">$message</text>
       $progressXml
     </binding>
   </visual>
 </toast>
 """;
 
-    await WinToast.instance().showCustomToast(
-      xml: xml,
-      tag: id.toString(),
+    final notification = NotificationMessage.fromCustomTemplate(
+      id.toString(),
       group: 'Obtainium',
+      launch: payload,
     );
-    */
+
+    await _winNotify.showNotificationCustomTemplate(notification, xml);
   }
 
   Future<void> notify(
