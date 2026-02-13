@@ -484,7 +484,7 @@ String preStandardizeUrl(String url) {
   return url;
 }
 
-String noAPKFound = tr('noAPKFound');
+String get noAPKFound => tr('noAPKFound');
 
 List<String> getLinksFromParsedHTML(
   Document dom,
@@ -520,7 +520,13 @@ Future<List<MapEntry<String, String>>> filterApksByArch(
   List<MapEntry<String, String>> apkUrls,
 ) async {
   if (apkUrls.length > 1) {
-    var abis = (await DeviceInfoPlugin().androidInfo).supportedAbis;
+    List<String> abis = [];
+    if (Platform.isAndroid) {
+      abis = (await DeviceInfoPlugin().androidInfo).supportedAbis;
+    } else if (Platform.isWindows) {
+      // Windows usually uses x64, arm64
+      abis = ['x64', 'arm64', 'x86'];
+    }
     for (var abi in abis) {
       var urls2 = apkUrls
           .where((element) => RegExp('.*$abi.*').hasMatch(element.key))

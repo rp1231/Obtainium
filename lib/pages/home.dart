@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:animations/animations.dart';
 import 'package:app_links/app_links.dart';
@@ -63,7 +64,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    initDeepLinks();
+    if (Platform.isAndroid) initDeepLinks();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       var sp = context.read<SettingsProvider>();
       if (!sp.welcomeShown) {
@@ -325,36 +326,62 @@ class _HomePageState extends State<HomePage> {
     prevAppCount = appsProvider.apps.length;
     prevIsLoading = appsProvider.loadingApps;
 
+    int currentIndex = selectedIndexHistory.isEmpty ? 0 : selectedIndexHistory.last;
+
+    Widget body = PageTransitionSwitcher(
+      duration: Duration(
+        milliseconds: settingsProvider.disablePageTransitions ? 0 : 300,
+      ),
+      reverse: settingsProvider.reversePageTransitions
+          ? !isReversing
+          : isReversing,
+      transitionBuilder:
+          (
+            Widget child,
+            Animation<double> animation,
+            Animation<double> secondaryAnimation,
+          ) {
+            return SharedAxisTransition(
+              animation: animation,
+              secondaryAnimation: secondaryAnimation,
+              transitionType: Platform.isWindows 
+                  ? SharedAxisTransitionType.vertical 
+                  : SharedAxisTransitionType.horizontal,
+              child: child,
+            );
+          },
+      child: pages
+          .elementAt(currentIndex)
+          .widget,
+    );
+
     return WillPopScope(
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
-        body: PageTransitionSwitcher(
-          duration: Duration(
-            milliseconds: settingsProvider.disablePageTransitions ? 0 : 300,
-          ),
-          reverse: settingsProvider.reversePageTransitions
-              ? !isReversing
-              : isReversing,
-          transitionBuilder:
-              (
-                Widget child,
-                Animation<double> animation,
-                Animation<double> secondaryAnimation,
-              ) {
-                return SharedAxisTransition(
-                  animation: animation,
-                  secondaryAnimation: secondaryAnimation,
-                  transitionType: SharedAxisTransitionType.horizontal,
-                  child: child,
-                );
-              },
-          child: pages
-              .elementAt(
-                selectedIndexHistory.isEmpty ? 0 : selectedIndexHistory.last,
+        body: Platform.isWindows
+            ? Row(
+                children: [
+                  NavigationRail(
+                    extended: MediaQuery.of(context).size.width >= 1200,
+                    destinations: pages
+                        .map(
+                          (e) => NavigationRailDestination(
+                            icon: Icon(e.icon),
+                            label: Text(e.title),
+                          ),
+                        )
+                        .toList(),
+                    selectedIndex: currentIndex,
+                    onDestinationSelected: (int index) async {
+                      switchToPage(index);
+                    },
+                  ),
+                  const VerticalDivider(thickness: 1, width: 1),
+                  Expanded(child: body),
+                ],
               )
-              .widget,
-        ),
-        bottomNavigationBar: NavigationBar(
+            : body,
+        bottomNavigationBar: Platform.isWindows ? null : NavigationBar(
           destinations: pages
               .map(
                 (e) =>
@@ -365,9 +392,7 @@ class _HomePageState extends State<HomePage> {
             HapticFeedback.selectionClick();
             switchToPage(index);
           },
-          selectedIndex: selectedIndexHistory.isEmpty
-              ? 0
-              : selectedIndexHistory.last,
+          selectedIndex: currentIndex,
         ),
       ),
       onWillPop: () async {

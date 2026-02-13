@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -303,7 +304,7 @@ class AppsPageState extends State<AppsPage> {
       listedApps = listedApps.reversed.toList();
     }
 
-    var existingUpdates = appsProvider.findExistingUpdates(installedOnly: true);
+    var existingUpdates = appsProvider.findExistingUpdates(installedOnly: true).map((e) => e.id).toList();
 
     var existingUpdateIdsAllOrSelected = existingUpdates
         .where(
@@ -314,6 +315,7 @@ class AppsPageState extends State<AppsPage> {
         .toList();
     var newInstallIdsAllOrSelected = appsProvider
         .findExistingUpdates(nonInstalledOnly: true)
+        .map((e) => e.id)
         .where(
           (element) => selectedAppIds.isEmpty
               ? listedApps.where((a) => a.app.id == element).isNotEmpty
@@ -504,7 +506,7 @@ class AppsPageState extends State<AppsPage> {
           },
         ),
         onDoubleTap: () {
-          pm.openApp(listedApps[appIndex].app.id);
+          // pm!.openApp(listedApps[appIndex].app.id);
         },
         onLongPress: () {
           Navigator.push(
@@ -1074,6 +1076,7 @@ class AppsPageState extends State<AppsPage> {
                             var encoder = const JsonEncoder.withIndent("    ");
                             var exportJSON = encoder.convert(
                               appsProvider.generateExportJSON(
+                                selectedApps.toList(),
                                 appIds: selectedApps.map((e) => e.id).toList(),
                                 overrideExportSettings: 0,
                               ),

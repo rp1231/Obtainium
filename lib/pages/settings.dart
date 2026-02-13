@@ -15,7 +15,6 @@ import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -625,70 +624,9 @@ class _SettingsPageState extends State<SettingsPage> {
                           ],
                         ),
                         height16,
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Flexible(child: Text(tr('useShizuku'))),
-                            Switch(
-                              value: settingsProvider.useShizuku,
-                              onChanged: (useShizuku) {
-                                if (useShizuku) {
-                                  ShizukuApkInstaller.checkPermission().then((
-                                    resCode,
-                                  ) {
-                                    settingsProvider.useShizuku = resCode!
-                                        .startsWith('granted');
-                                    switch (resCode) {
-                                      case 'binder_not_found':
-                                        showError(
-                                          ObtainiumError(
-                                            tr('shizukuBinderNotFound'),
-                                          ),
-                                          context,
-                                        );
-                                      case 'old_shizuku':
-                                        showError(
-                                          ObtainiumError(tr('shizukuOld')),
-                                          context,
-                                        );
-                                      case 'old_android_with_adb':
-                                        showError(
-                                          ObtainiumError(
-                                            tr('shizukuOldAndroidWithADB'),
-                                          ),
-                                          context,
-                                        );
-                                      case 'denied':
-                                        showError(
-                                          ObtainiumError(tr('cancelled')),
-                                          context,
-                                        );
-                                    }
-                                  });
-                                } else {
-                                  settingsProvider.useShizuku = false;
-                                }
-                              },
-                            ),
-                          ],
-                        ),
+                        const SizedBox.shrink(),
                         height16,
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Flexible(
-                              child: Text(tr('shizukuPretendToBeGooglePlay')),
-                            ),
-                            Switch(
-                              value:
-                                  settingsProvider.shizukuPretendToBeGooglePlay,
-                              onChanged: (value) {
-                                settingsProvider.shizukuPretendToBeGooglePlay =
-                                    value;
-                              },
-                            ),
-                          ],
-                        ),
+                        const SizedBox.shrink(),
                         height32,
                         Text(
                           tr('sourceSpecific'),
@@ -779,17 +717,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                             value:
                                                 settingsProvider.useSystemFont,
                                             onChanged: (useSystemFont) {
-                                              if (useSystemFont) {
-                                                NativeFeatures.loadSystemFont()
-                                                    .then((val) {
-                                                      settingsProvider
-                                                              .useSystemFont =
-                                                          true;
-                                                    });
-                                              } else {
-                                                settingsProvider.useSystemFont =
-                                                    false;
-                                              }
+                                              settingsProvider.useSystemFont = useSystemFont;
                                             },
                                           ),
                                         ],

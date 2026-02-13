@@ -85,7 +85,10 @@ class _ImportExportPageState extends State<ImportExportPage> {
           });
           appsProvider
               .addAppsByURL(urls)
-              .then((errors) {
+              .then((results) {
+                var errors = List<List<String>>.from(
+                  results[1].map((e) => List<String>.from(e)),
+                );
                 if (errors.isEmpty) {
                   showMessage(
                     tr(
@@ -162,7 +165,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                 });
                 appsProvider.addMissingCategories(settingsProvider);
                 showMessage(
-                  '${tr('importedX', args: [plural('apps', value.key.length).toLowerCase()])}${value.value ? ' + ${tr('settings').toLowerCase()}' : ''}',
+                  tr('importedX', args: [plural('apps', value.key.length).toLowerCase()]),
                   context,
                 );
               });
@@ -263,9 +266,12 @@ class _ImportExportPageState extends State<ImportExportPage> {
                       },
                     );
                 if (selectedUrls != null && selectedUrls.isNotEmpty) {
-                  var errors = await appsProvider.addAppsByURL(
+                  var results = await appsProvider.addAppsByURL(
                     selectedUrls,
                     sourceOverride: source,
+                  );
+                  var errors = List<List<String>>.from(
+                    results[1].map((e) => List<String>.from(e)),
                   );
                   if (errors.isEmpty) {
                     // ignore: use_build_context_synchronously
@@ -335,7 +341,10 @@ class _ImportExportPageState extends State<ImportExportPage> {
                     },
                   );
               if (selectedUrls != null) {
-                var errors = await appsProvider.addAppsByURL(selectedUrls);
+                var results = await appsProvider.addAppsByURL(selectedUrls);
+                var errors = List<List<String>>.from(
+                  results[1].map((e) => List<String>.from(e)),
+                );
                 if (errors.isEmpty) {
                   // ignore: use_build_context_synchronously
                   showMessage(

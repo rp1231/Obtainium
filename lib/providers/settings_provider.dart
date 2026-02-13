@@ -1,6 +1,7 @@
 // Exposes functions used to save/load app settings
 
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -11,9 +12,8 @@ import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:shared_storage/shared_storage.dart' as saf;
 
-String obtainiumTempId = 'imranr98_obtainium_${GitHub().hosts[0]}';
+String get obtainiumTempId => 'imranr98_obtainium_${GitHub().hosts[0]}';
 String obtainiumId = 'dev.imranr.obtainium';
 String obtainiumUrl = 'https://github.com/ImranR98/Obtainium';
 Color obtainiumThemeColor = const Color(0xFF6438B5);
@@ -48,12 +48,10 @@ class SettingsProvider with ChangeNotifier {
   }
 
   bool get useShizuku {
-    return prefs?.getBool('useShizuku') ?? false;
+    return false;
   }
 
   set useShizuku(bool useShizuku) {
-    prefs?.setBool('useShizuku', useShizuku);
-    notifyListeners();
   }
 
   ThemeSettings get theme {
@@ -179,20 +177,6 @@ class SettingsProvider with ChangeNotifier {
   }
 
   Future<bool> getInstallPermission({bool enforce = false}) async {
-    while (!(await Permission.requestInstallPackages.isGranted)) {
-      // Explicit request as InstallPlugin request sometimes bugged
-      Fluttertoast.showToast(
-        msg: tr('pleaseAllowInstallPerm'),
-        toastLength: Toast.LENGTH_LONG,
-      );
-      if ((await Permission.requestInstallPackages.request()) ==
-          PermissionStatus.granted) {
-        return true;
-      }
-      if (!enforce) {
-        return false;
-      }
-    }
     return true;
   }
 
@@ -363,30 +347,24 @@ class SettingsProvider with ChangeNotifier {
   }
 
   bool get enableBackgroundUpdates {
-    return prefs?.getBool('enableBackgroundUpdates') ?? true;
+    return false;
   }
 
   set enableBackgroundUpdates(bool val) {
-    prefs?.setBool('enableBackgroundUpdates', val);
-    notifyListeners();
   }
 
   bool get bgUpdatesOnWiFiOnly {
-    return prefs?.getBool('bgUpdatesOnWiFiOnly') ?? false;
+    return false;
   }
 
   set bgUpdatesOnWiFiOnly(bool val) {
-    prefs?.setBool('bgUpdatesOnWiFiOnly', val);
-    notifyListeners();
   }
 
   bool get bgUpdatesWhileChargingOnly {
-    return prefs?.getBool('bgUpdatesWhileChargingOnly') ?? false;
+    return false;
   }
 
   set bgUpdatesWhileChargingOnly(bool val) {
-    prefs?.setBool('bgUpdatesWhileChargingOnly', val);
-    notifyListeners();
   }
 
   DateTime get lastCompletedBGCheckTime {
@@ -420,48 +398,17 @@ class SettingsProvider with ChangeNotifier {
   }
 
   Future<Uri?> getExportDir() async {
-    var uriString = prefs?.getString('exportDir');
-    if (uriString != null) {
-      Uri? uri = Uri.parse(uriString);
-      if (!(await saf.canRead(uri) ?? false) ||
-          !(await saf.canWrite(uri) ?? false)) {
-        uri = null;
-        prefs?.remove('exportDir');
-        notifyListeners();
-      }
-      return uri;
-    } else {
-      return null;
-    }
+    return null;
   }
 
   Future<void> pickExportDir({bool remove = false}) async {
-    var existingSAFPerms = (await saf.persistedUriPermissions()) ?? [];
-    var currentOneWayDataSyncDir = await getExportDir();
-    Uri? newOneWayDataSyncDir;
-    if (!remove) {
-      newOneWayDataSyncDir = (await saf.openDocumentTree());
-    }
-    if (currentOneWayDataSyncDir?.path != newOneWayDataSyncDir?.path) {
-      if (newOneWayDataSyncDir == null) {
-        prefs?.remove('exportDir');
-      } else {
-        prefs?.setString('exportDir', newOneWayDataSyncDir.toString());
-      }
-      notifyListeners();
-    }
-    for (var e in existingSAFPerms) {
-      await saf.releasePersistableUriPermission(e.uri);
-    }
   }
 
   bool get autoExportOnChanges {
-    return prefs?.getBool('autoExportOnChanges') ?? false;
+    return false;
   }
 
   set autoExportOnChanges(bool val) {
-    prefs?.setBool('autoExportOnChanges', val);
-    notifyListeners();
   }
 
   bool get onlyCheckInstalledOrTrackOnlyApps {
@@ -509,29 +456,23 @@ class SettingsProvider with ChangeNotifier {
   }
 
   bool get beforeNewInstallsShareToAppVerifier {
-    return prefs?.getBool('beforeNewInstallsShareToAppVerifier') ?? true;
+    return false;
   }
 
   set beforeNewInstallsShareToAppVerifier(bool val) {
-    prefs?.setBool('beforeNewInstallsShareToAppVerifier', val);
-    notifyListeners();
   }
 
   bool get shizukuPretendToBeGooglePlay {
-    return prefs?.getBool('shizukuPretendToBeGooglePlay') ?? false;
+    return false;
   }
 
   set shizukuPretendToBeGooglePlay(bool val) {
-    prefs?.setBool('shizukuPretendToBeGooglePlay', val);
-    notifyListeners();
   }
 
   bool get useFGService {
-    return prefs?.getBool('useFGService') ?? false;
+    return false;
   }
 
   set useFGService(bool val) {
-    prefs?.setBool('useFGService', val);
-    notifyListeners();
   }
 }

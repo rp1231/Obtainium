@@ -1,12 +1,24 @@
 // Exposes functions that can be used to send notifications to the user
 // Contains a set of pre-defined ObtainiumNotification objects that should be used throughout the app
 
+import 'dart:io';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+// import 'package:win_toast/win_toast.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
+
+enum Importance {
+  none,
+  min,
+  low,
+  defaultImportance,
+  high,
+  max,
+  unspecified
+}
 
 class ObtainiumNotification {
   late int id;
@@ -166,7 +178,7 @@ class DownloadedNotification extends ObtainiumNotification {
       );
 }
 
-final completeInstallationNotification = ObtainiumNotification(
+ObtainiumNotification get completeInstallationNotification => ObtainiumNotification(
   1,
   tr('completeAppInstallation'),
   tr('obtainiumMustBeOpenToInstallApps'),
@@ -190,49 +202,34 @@ class CheckingUpdatesNotification extends ObtainiumNotification {
 }
 
 class NotificationsProvider {
-  FlutterLocalNotificationsPlugin notifications =
-      FlutterLocalNotificationsPlugin();
-
   bool isInitialized = false;
 
-  Map<Importance, Priority> importanceToPriority = {
-    Importance.defaultImportance: Priority.defaultPriority,
-    Importance.high: Priority.high,
-    Importance.low: Priority.low,
-    Importance.max: Priority.max,
-    Importance.min: Priority.min,
-    Importance.none: Priority.min,
-    Importance.unspecified: Priority.defaultPriority,
-  };
-
   Future<void> initialize() async {
-    isInitialized =
-        await notifications.initialize(
-          settings: const InitializationSettings(
-            android: AndroidInitializationSettings('ic_notification'),
-          ),
-          onDidReceiveNotificationResponse: (NotificationResponse response) {
-            _showNotificationPayload(response.payload);
-          },
-        ) ??
-        false;
+    if (isInitialized) return;
+    /*
+    isInitialized = await WinToast.instance().initialize(
+      aumId: 'Obtainium',
+      displayName: 'Obtainium',
+      iconPath: '',
+      clsid: '{5DE36BB4-6CD1-46C1-BE3A-27AF0A973FD9}',
+    );
+
+    WinToast.instance().setActivatedCallback((event) {
+      _showNotificationPayload(event.argument);
+    });
+    */
+    isInitialized = true;
   }
 
   Future<void> checkLaunchByNotif() async {
-    final NotificationAppLaunchDetails? launchDetails = await notifications
-        .getNotificationAppLaunchDetails();
-    if (launchDetails?.didNotificationLaunchApp ?? false) {
-      _showNotificationPayload(
-        launchDetails!.notificationResponse?.payload,
-        doublePop: true,
-      );
-    }
+    // Not directly supported by win_toast, but usually handled by callbacks if initialized early.
   }
 
   void _showNotificationPayload(String? payload, {bool doublePop = false}) {
     if (payload?.isNotEmpty == true) {
-      var title = (payload ?? '\n\n').split('\n').first;
-      var content = (payload ?? '\n\n').split('\n').sublist(1).join('\n');
+      var parts = payload!.split('\n');
+      var title = parts.first;
+      var content = parts.length > 1 ? parts.sublist(1).join('\n') : '';
       globalNavigatorKey.currentState?.push(
         PageRouteBuilder(
           pageBuilder: (context, _, __) => AlertDialog(
@@ -256,10 +253,7 @@ class NotificationsProvider {
   }
 
   Future<void> cancel(int id) async {
-    if (!isInitialized) {
-      await initialize();
-    }
-    await notifications.cancel(id: id);
+    // await WinToast.instance().dismiss(tag: id.toString(), group: 'Obtainium');
   }
 
   Future<void> notifyRaw(
@@ -275,33 +269,35 @@ class NotificationsProvider {
     bool onlyAlertOnce = false,
     String? payload,
   }) async {
-    if (cancelExisting) {
-      await cancel(id);
-    }
     if (!isInitialized) {
       await initialize();
     }
-    await notifications.show(
-      id: id,
-      title: title,
-      body: message,
-      notificationDetails: NotificationDetails(
-        android: AndroidNotificationDetails(
-          channelCode,
-          channelName,
-          channelDescription: channelDescription,
-          importance: importance,
-          priority: importanceToPriority[importance]!,
-          groupKey: '$obtainiumId.$channelCode',
-          progress: progPercent ?? 0,
-          maxProgress: 100,
-          showProgress: progPercent != null,
-          onlyAlertOnce: onlyAlertOnce,
-          indeterminate: progPercent != null && progPercent < 0,
-        ),
-      ),
-      payload: payload,
+    /*
+    String progressXml = '';
+    if (progPercent != null) {
+      double value = progPercent >= 0 ? progPercent / 100.0 : 0.0;
+      String valueString = progPercent >= 0 ? '$progPercent%' : '';
+      progressXml = '<progress title="$title" status="$message" value="$value" valueStringOverride="$valueString" />';
+    }
+
+    String xml = """
+<toast launch="${payload ?? ''}">
+  <visual>
+    <binding template="ToastGeneric">
+      <text>$title</text>
+      <text>$message</text>
+      $progressXml
+    </binding>
+  </visual>
+</toast>
+""";
+
+    await WinToast.instance().showCustomToast(
+      xml: xml,
+      tag: id.toString(),
+      group: 'Obtainium',
     );
+    */
   }
 
   Future<void> notify(

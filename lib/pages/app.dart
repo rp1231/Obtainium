@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -372,9 +374,7 @@ class _AppPageState extends State<AppPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       GestureDetector(
-                        onTap: app == null
-                            ? null
-                            : () => pm.openApp(app.app.id),
+                        onTap: null,
                         child: Image.memory(
                           app!.icon!,
                           height: small ? 70 : 150,
@@ -633,9 +633,7 @@ class _AppPageState extends State<AppPage> {
                   ),
                 if (app != null && app.installedInfo != null)
                   IconButton(
-                    onPressed: () {
-                      appsProvider.openAppSettings(app.app.id);
-                    },
+                    onPressed: null,
                     icon: const Icon(Icons.settings),
                     tooltip: tr('settings'),
                   ),
